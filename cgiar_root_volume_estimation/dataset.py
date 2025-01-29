@@ -10,7 +10,7 @@ import glob
 
 import pandas as pd
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import torchvision
 import lightning as L
 
@@ -55,13 +55,13 @@ def read_csv_metadata(filepath: str,)->pd.DataFrame:
     return csv_file
 
 
-@dataclass
-class CGIAR_VOLUME_DATACLASS:
-    """
-    Make a training tuple
-    """
-    idx_value : str
-    radar_img : torch.Tensor
+# @dataclass
+# class CGIAR_VOLUME_DATACLASS:
+#     """
+#     Make a training tuple
+#     """
+#     idx_value : str
+#     radar_img : torch.Tensor
 
 class CGIAR_VOLUMNE_DATASET(Dataset):
     """
@@ -103,9 +103,9 @@ class CGIAR_VOLUMNE_DATASET(Dataset):
         # image_list = [torch.io.read_image(_)
         #               for _ in image_path_list]
 
-        return CGIAR_VOLUME_DATACLASS(
-            idx_value=selected_idx,
-            radar_img=random_image,
+        return (
+            selected_idx,
+            random_image,
         )
 
 
@@ -120,17 +120,33 @@ class CGIAR_VOLUMNE_DataModule(L.LightningDataModule):
         self.data_dir = data_dir
         self.batch_size = batch_size
 
-    def setup(self, stage: str):
-        raise NotImplementedError
+    def setup(self, ): # stage: str):
+        """ Set the conditions to read the data"""
+        self.train_ds = CGIAR_VOLUMNE_DATASET(
+            input_folder=self.data_dir,
+            input_file="Train.csv")
+
+        self.test_ds = CGIAR_VOLUMNE_DATASET(
+            input_folder=self.data_dir,
+            input_file="Test.csv")
 
     def train_dataloader(self):
-        raise NotImplementedError
+        return DataLoader(
+            dataset=self.train_ds,
+            batch_size=self.batch_size,
+            shuffle=True)
 
     def val_dataloader(self):
-        raise NotImplementedError
+        return DataLoader(
+            dataset=self.train_ds,
+            batch_size=self.batch_size,
+            shuffle=True)
 
     def test_dataloader(self):
-        raise NotImplementedError
+        return DataLoader(
+            dataset=self.test_ds,
+            batch_size=self.batch_size,
+            shuffle=True)
 
     def predict_dataloader(self):
         raise NotImplementedError
